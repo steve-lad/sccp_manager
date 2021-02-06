@@ -15,6 +15,7 @@ if (!defined('FREEPBX_IS_AUTH')) {
 // is only for DISPLAYING things.  MVC is a cool idea, ya know?
 //
 $spage = FreePBX::create()->Sccp_manager;
+//$spage = FreePBX::Sccp_Manager();
 if (empty($spage->class_error)) {
     $display_page = $spage->phoneShowPage();
     $display_info = _("SCCP Phone Manager");

@@ -98,13 +98,10 @@ class extconfigs
         }
         if (empty($index)) {
             return $result;
-        } else {
-            if (isset($result[$index])) {
-                return $result[$index];
-            } else {
-                return array();
-            }
+        } elseif (isset($result[$index])) {
+            return $result[$index];
         }
+        return array();
     }
 
     private function get_cisco_time_zone($tzc)
@@ -269,7 +266,10 @@ class extconfigs
     {
 //        global $db;
 //        global $amp_conf;
-// *** Setings for Provision Sccp
+        if (empty($confDir)) {
+            return array('error' => 'empty СonfDir');
+        }
+// *** Settings for Provision Sccp
         $adv_config = array('tftproot' => '', 'firmware' => 'firmware', 'settings' => 'settings',
             'locales' => 'locales', 'languages' => 'languages', 'templates' => 'templates', 'dialplan' => 'dialplan', 'softkey' => 'softkey');
 // 'pro' /tftpboot - root dir
@@ -290,50 +290,41 @@ class extconfigs
 //* **************------ ****
         $base_tree = array('tftp_templates' => 'templates', 'tftp_path_store' => 'settings', 'tftp_lang_path' => 'languages', 'tftp_firmware_path' => 'firmware', 'tftp_dialplan' => 'dialplan', 'tftp_softkey' => 'softkey');
 
-        if (empty($confDir)) {
-            return array('error' => 'empty СonfDir');
-        }
-
         $base_config = array('asterisk' => $confDir, 'sccp_conf' => $confDir . '/sccp.conf', 'tftp_path' => '');
 
 //      Test Base dir (/tftproot)
-        if (!empty($db_vars["tftp_path"])) {
-            if (file_exists($db_vars["tftp_path"]["data"])) {
-                $base_config["tftp_path"] = $db_vars["tftp_path"]["data"];
-            }
+        if (!empty($db_vars["tftp_path"]) && file_exists($db_vars["tftp_path"]["data"])) {
+            $base_config["tftp_path"] = $db_vars["tftp_path"]["data"];
         }
-        if (empty($base_config["tftp_path"])) {
-            if (file_exists($this->getextConfig('sccpDefaults', "tftp_path"))) {
-                $base_config["tftp_path"] = $this->getextConfig('sccpDefaults', "tftp_path");
-            }
+        if (empty($base_config["tftp_path"] && file_exists($this->getextConfig('sccpDefaults', "tftp_path")))) {
+            $base_config["tftp_path"] = $this->getextConfig('sccpDefaults', "tftp_path");
         }
         if (empty($base_config["tftp_path"])) {
             if (!empty($this->paren_class)) {
-                $this->paren_class->class_error['tftp_path'] = 'Tftp path not exist or not defined';
+                $this->paren_class->class_error['tftp_path'] = 'Tftp path does not exist or is not defined';
             }
             return array('error' => 'empty tftp_path');
         }
         if (!is_writeable($base_config["tftp_path"])) {
             if (!empty($this->paren_class)) {
-                $this->paren_class->class_error['tftp_path'] = 'No write permission on tftp DIR';
+                $this->paren_class->class_error['tftp_path'] = 'Sccp Manager does not have write permission for '.$base_config['tftp_path'];
             }
             return array('error' => 'No write permission on tftp DIR');
         }
 //      END Test Base dir (/tftproot)
 
+        $adv_tree_mode = 'def';
+        $adv_config['tftproot'] = $base_config["tftp_path"];
+
         if (!empty($db_vars['tftp_rewrite_path'])) {
             $adv_ini = $db_vars['tftp_rewrite_path']["data"];
         }
-
-        $adv_tree_mode = 'def';
         if (empty($db_vars["tftp_rewrite"])) {
             $db_vars["tftp_rewrite"]["data"] = "off";
         }
-
-        $adv_config['tftproot'] = $base_config["tftp_path"];
         if ($db_vars["tftp_rewrite"]["data"] == 'pro') {
             $adv_tree_mode = 'pro';
-            if (!empty($adv_ini)) { // something found in external conflicts
+            if (!empty($adv_ini)) { // something found in sccpsettings
                 $adv_ini .= '/index.cnf';
                 if (file_exists($adv_ini)) {
                     $adv_ini_array = parse_ini_file($adv_ini);
@@ -363,7 +354,7 @@ class extconfigs
                 }
             }
         }
-        print_r($base_config, 1);
+//        print_r($base_config, 1);
 //        die(print_r($base_config,1));
 //        $base_config['External_ini'] = $adv_config;
 //        $base_config['External_mode'] =  $adv_tree_mode;
@@ -397,14 +388,15 @@ class extconfigs
 
 
         $dst = $_SERVER['DOCUMENT_ROOT'] . '/admin/modules/core/functions.inc/drivers/Sccp.class.php';
-        if (!file_exists($dst) || $sccp_driver_replace == 'yes') {
+        if (!file_exists($dst) || $sccp_driver_replace ) {
             $src_path = $_SERVER['DOCUMENT_ROOT'] . '/admin/modules/sccp_manager/conf/' . basename($dst) . '.v' . $db_vars['sccp_compatible']['data'];
-            if (file_exists($src_path)) {
-                copy($src_path, $dst);
-            } else {
+            if (!file_exists($src_path)) {
+//                copy($src_path, $dst);
+//            } else {
                 $src_path = $_SERVER['DOCUMENT_ROOT'] . '/admin/modules/sccp_manager/conf/' . basename($dst);
-                copy($src_path, $dst);
+//                copy($src_path, $dst);
             }
+            copy($src_path, $dst);
         }
 
         if (!file_exists($base_config["sccp_conf"])) { // System re Config
@@ -422,8 +414,8 @@ class extconfigs
         if (empty($realm)) {
             $realm = 'sccp';
         }
-        $cnf_int = \FreePBX::Config();
-        $cnf_wr = \FreePBX::WriteConfig();
+//        $cnf_int = \FreePBX::Config();
+//        $cnf_wr = \FreePBX::WriteConfig();
         $cnf_read = \FreePBX::LoadConfig();
 
         $def_config = array('sccpdevice' => 'mysql,' . $realm . ',sccpdeviceconfig', 'sccpline' => 'mysql,' . $realm . ',sccpline');
@@ -433,7 +425,7 @@ class extconfigs
             'dbport' => '3306', 'dbsock' => '/var/lib/mysql/mysql.sock');
         $def_bd_sec = 'sccp';
 
-        $dir = $cnf_int->get('ASTETCDIR');
+        $dir = $amp_conf['ASTETCDIR'];
         $res_conf_sql = ini_get('pdo_mysql.default_socket');
         $res_conf_old = '';
         $res_conf = '';
@@ -474,6 +466,7 @@ class extconfigs
             $res['extconfig'] = 'File extconfig.conf does not exist';
         }
 
+        $res['mysqlconfig'] = 'OK';
 
         if (!empty($res_conf_sql)) {
             if (file_exists($res_conf_sql)) {
@@ -488,9 +481,6 @@ class extconfigs
                 if ($res_conf[$realm]['dbsock'] != $def_bd_config['dbsock']) {
                     $res['mysqlconfig'] = 'Mysql Socket Error in file: res_mysql.conf';
                 }
-            }
-            if (empty($res['mysqlconfig'])) {
-                $res['mysqlconfig'] = 'OK';
             }
         }
 

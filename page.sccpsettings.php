@@ -10,6 +10,7 @@ if (!defined('FREEPBX_IS_AUTH')) {
 // AGPL v3 Licened
 
 //
+//$spage = FreePBX::Sccp_Manager();
 $spage = FreePBX::create()->Sccp_manager;
 
 $display_page = $spage->myShowPage();

@@ -21,7 +21,7 @@ class dbinterface
 
     public function info()
     {
-        $Ver = '13.0.2';
+        $Ver = '13.0.2';   // Does this need to be updated??
         return array('Version' => $Ver,
             'about' => 'Data access interface ver: ' . $Ver);
     }
@@ -155,12 +155,19 @@ class dbinterface
 
         return $raw_settings;
     }
-
-    public function get_db_SccpSetting()
-    {
-        $sql = "SELECT `keyword`, `data`, `type`, `seq` FROM `sccpsettings` ORDER BY `type`, `seq`";
-        $raw_settings = sql($sql, "getAll", DB_FETCHMODE_ASSOC);
-        return $raw_settings;
+    public function getSccpSettingsFromDB () {
+//    public function get_db_SccpSetting()
+//    {
+        global $db;
+//        $sql = "SELECT `keyword`, `data`, `type`, `seq` FROM `sccpsettings` ORDER BY `type`, `seq`";
+        $stmt = $db->prepare("SELECT * FROM `sccpsettings` ORDER BY `type`, `seq`");
+        $stmt->execute();
+//        $raw_settings = sql($sql, "getAll", DB_FETCHMODE_ASSOC);
+        foreach ($stmt->fetchAll(\PDO::FETCH_ASSOC) as $var) {
+            $mysccpvalues[$var['keyword']] = array('keyword' => $var['keyword'], 'data' => $var['data'], 'seq' => $var['seq'], 'type' => $var['type']);
+        }
+//dbug('Result', $sccpvalues);
+        return $mysccpvalues;
     }
 
     public function get_db_sysvalues()
@@ -240,53 +247,54 @@ class dbinterface
         return $raw_settings;
     }
 
-    function write($db_name = "", $save_value = array(), $mode = 'update', $key_fld = "", $hwid = "")
+    function write($table_name = "", $save_value = array(), $mode = 'update', $key_fld = "", $hwid = "")
     {
-        // mode clear  - Empty tabele before update
+        // mode clear  - Empty table before update
         // mode update - update / replace record
         global $db;
 //        global $amp_conf;
         $result = "Error";
         $delete_value = array();
-        switch ($db_name) {
+        switch ($table_name) {
             case 'sccpsettings':
                 foreach ($save_value as $key_v => $data) {
-                    if (!empty($data)) {
-                        if (isset($data[1])) {
-                            if ($data[1] == $this->val_null) {
+//dbug('data1', $data); // problem here - undefined offset 1
+                    if (!empty($data) && (isset($data['data']))) {
+//                        if (isset($data['data'])) {
+                            if ($data['data'] === $this->val_null) {
                                 $delete_value[] = $save_value[$key_v]['keyword'];
                                 unset($save_value[$key_v]);
                             }
-                        }
-                        if (isset($data['data'])) {
+                    }
+/*                        if (isset($data['data'])) {
                             if ($data['data'] == $this->val_null) {
                                 $delete_value[] = $save_value[$key_v]['keyword'];
                                 unset($save_value[$key_v]);
-                            }
-                        }
+                            }                      }
                     }
-                }
+*/                }
                 if ($mode == 'clear') {
-                    $sql = 'truncate `sccpsettings`';
-                    $stmt = $db->prepare($sql);
-                    $stmt->execute();
-                    $stmt = $db->prepare('INSERT INTO `sccpsettings` (`keyword`, `data`, `seq`, `type`) VALUES (?,?,?,?)');
+                    $db->prepare('TRUNCATE sccpsettings')->execute();
+                    $stmt = $db->prepare('INSERT INTO sccpsettings (`keyword`, `data`, `seq`, `type`) VALUES (?,?,?,?)');
                     $result = $db->executeMultiple($stmt, $save_value);
+//dbug('save_value is:',$save_value);
                 } else {
                     if (!empty($delete_value)) {
-                        $stmt = $db->prepare('DELETE FROM `sccpsettings` WHERE `keyword`=?');
+                        $stmt = $db->prepare('DELETE FROM sccpsettings WHERE keyword =?');
                         $result = $db->executeMultiple($stmt, $delete_value);
                     }
                     if (!empty($save_value)) {
-                        $stmt = $db->prepare('REPLACE INTO `sccpsettings` (`keyword`, `data`, `seq`, `type`) VALUES (?,?,?,?)');
+                        $stmt = $db->prepare('REPLACE INTO sccpsettings (`keyword`, `data`, `seq`, `type`) VALUES (?,?,?,?)');
                         $result = $db->executeMultiple($stmt, $save_value);
                     }
                 }
                 break;
             case 'sccpdevmodel':
+                break;
             case 'sccpdevice':
+                break;
             case 'sccpuser':
-                $sql_db = $db_name;
+                $sql_db = $table_name;
                 $sql_key = "";
                 $sql_var = "";
                 foreach ($save_value as $key_v => $data) {
@@ -318,7 +326,7 @@ class dbinterface
                 break;
             case 'sccpbuttons':
                 if (($mode == 'clear') || ($mode == 'delete')) {
-                    $sql = 'DELETE FROM `sccpbuttonconfig` WHERE ref="' . $hwid . '";';
+                    $sql = 'DELETE FROM sccpbuttonconfig WHERE ref="' . $hwid . '";';
                     $stmt = $db->prepare($sql);
                     $stmt->execute();
                 }
@@ -329,25 +337,26 @@ class dbinterface
                     break;
                 }
                 if ($mode == 'replace') {
-                    $sql = 'UPDATE `sccpbuttonconfig` SET `name`=? WHERE  `ref`= ? AND `reftype`=? AND `instance`=?  AND `buttontype`=?;';
+                    $sql = 'UPDATE sccpbuttonconfig SET `name`=? WHERE  `ref`= ? AND `reftype`=? AND `instance`=?  AND `buttontype`=?;';
 //                    $sql = 'INSERT INTO `sccpbuttonconfig` (`ref`, `reftype`,`instance`, `buttontype`, `name`, `options`) VALUES (?,?,?,?,?,?);';
 //                    die(print_r($save_value,1));
                     $stmt = $db->prepare($sql);
                     $result= $db->executeMultiple($stmt, $save_value);
                 } else {
-                    $sql = 'INSERT INTO `sccpbuttonconfig` (`ref`, `reftype`,`instance`, `buttontype`, `name`, `options`) VALUES (?,?,?,?,?,?);';
+                    // INSERT will silently drop any new elements that are out of sort order. REPLACE is safer
+                    $sql = 'REPLACE INTO sccpbuttonconfig (`ref`, `reftype`,`instance`, `buttontype`, `name`, `options`) VALUES (?,?,?,?,?,?);';
 //                    die(print_r($save_value,1));
                     $stmt = $db->prepare($sql);
                     $result = $db->executeMultiple($stmt, $save_value);
                 }
-
                 break;
+            default:
+                return $result;
         }
-        return $result;
     }
 
     /*
-     *  My be Replace by SccpTables ??!
+     *  Maybe Replace by SccpTables ??!
      *
      */
     public function dump_sccp_tables($data_path, $database, $user, $pass)
@@ -356,7 +365,7 @@ class dbinterface
         $result = exec('mysqldump '.$database.' --password='.$pass.' --user='.$user.' --single-transaction >'.$filename, $output);
         return $filename;
     }
-    
+
 /*
  *  Check Table structure
  */
@@ -393,7 +402,7 @@ class dbinterface
                 break;
             }
         }
-        
+
         return $result;
     }
 }
