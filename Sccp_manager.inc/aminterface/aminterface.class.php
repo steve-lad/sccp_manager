@@ -435,8 +435,9 @@ class aminterface
         $result = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\ExtensionStateListAction();
-            $_response = $this->send($_action);
-            $_res = $_response->getResult();
+            $_res = $this->send($_action)->getResult();
+dbug('result from ExtensionStateList is', $_res);
+//            $_res = $_response->getResult();
             foreach ($_res as $key => $value) {
                 foreach ($value as $key2 => $value2) {
                     $result[$key2] = '@' . $key2;
@@ -451,8 +452,8 @@ class aminterface
         $result = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\ExtensionStateListAction();
-            $_response = $this->send($_action);
-            $_res = $_response->getResult();
+            $_res = $this->send($_action)->getResult();
+//          $_res = $_response->getResult();
             foreach ($_res as $key => $value) {
                 foreach ($value as $key2 => $value2) {
                     $result[$key.'@'.$key2] = $key.'@'.$key2;
@@ -467,8 +468,8 @@ class aminterface
         $result = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\SCCPShowSoftkeySetsAction();
-            $_response = $this->send($_action);
-            $_res = $_response->getResult();
+            $_res = $this->send($_action)->getResult();
+//            $_res = $_response->getResult();
             foreach ($_res as $key => $value) {
                 $result[$key] = $key;
             }
@@ -480,8 +481,8 @@ class aminterface
         $result = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\SCCPShowDevicesAction();
-            $_response = $this->send($_action);
-            $result = $_response->getResult();
+            $result = $this->send($_action)->getResult();
+  //          $result = $_response->getResult();
             foreach ($result as $key => $value) {
                 $result[$key]['name'] = $key;
             }
@@ -493,8 +494,8 @@ class aminterface
         $result = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\SCCPShowDeviceAction($devicename);
-            $_response = $this->send($_action);
-            $result = $_response->getResult();
+            $result = $this->send($_action)->getResult();
+//            $result = $_response->getResult();
             $result['MAC_Address'] = $result['macaddress'];
         }
         return $result;
@@ -522,8 +523,8 @@ class aminterface
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\ReloadAction('chan_sccp');
 //            $_action = new \FreePBX\modules\Sccp_manager\aminterface\CommandAction('sccp reload force'); // No Response Result !!
-            $_response = $this->send($_action);
-            $result = $_response->getMessage();
+            $result = $this->send($_action)->getMessage();
+//            $result = $_response->getMessage();
         }
         return $result;
     }
@@ -532,8 +533,8 @@ class aminterface
         $result = array();
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\SCCPConfigMetaDataAction();
-            $_response = $this->send($_action);
-            $result = $_response->getResult();
+            $result = $this->send($_action)->getResult();
+//            $result = $_response->getResult();
         }
         return $result;
     }

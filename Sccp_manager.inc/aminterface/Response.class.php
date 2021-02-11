@@ -493,7 +493,9 @@ class ExtensionStateList_Response extends SCCPGeneric_Response
     }
     public function getResult()
     {
+dbug('Entering getResult method of ExtensionStateList Response');
         $result = $this->ConvertEventData(array('exten','context'), array('exten','context','hint','status','statustext'));
+//dbug('the result is:', $result);
         return $result;
     }
 }
