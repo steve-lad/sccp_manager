@@ -262,6 +262,7 @@ class SCCPGeneric_Response extends Response
                     $set_name[$_fkey] = $_row[$_fkey];
                 }
             }
+dbug('result is', $result);
             $Data = &$result;
             if ($all_key_ok) {
                 foreach ($set_name as $value_id) {
@@ -272,6 +273,7 @@ class SCCPGeneric_Response extends Response
                 }
             }
         }
+dbug('result is', $result);
         return $result;
     }
 
@@ -493,7 +495,7 @@ class ExtensionStateList_Response extends SCCPGeneric_Response
     }
     public function getResult()
     {
-dbug('Entering getResult method of ExtensionStateList Response');
+//dbug('Entering getResult method of ExtensionStateList Response');
         $result = $this->ConvertEventData(array('exten','context'), array('exten','context','hint','status','statustext'));
 //dbug('the result is:', $result);
         return $result;

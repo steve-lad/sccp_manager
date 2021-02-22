@@ -508,7 +508,7 @@ class extconfigs
             }
         }
         if (empty($res['mysqlconfig'])) {
-            $res['mysqlconfig'] = 'Realtime Error: not found  res_config_mysql.conf or res_mysql.conf configutation on the path :' . $dir;
+            $res['mysqlconfig'] = 'Realtime Error: res_config_mysql.conf or res_mysql.conf configuration files not found on path :' . $dir;
         }
         return $res;
     }

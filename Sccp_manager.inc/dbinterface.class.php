@@ -29,30 +29,25 @@ class dbinterface
     /*
      * Core Access Function
      */
-    public function get_db_SccpTableByID($dataid, $data = array(), $indexField = '')
+    public function get_db_SccpTableByID($dataSet, $data = array(), $indexField = 'name')
     {
         $result = array();
-        $raw = $this->HWextension_db_SccpTableData($dataid, $data);
-        if (empty($raw) || empty($indexField)) {
-            return $raw;
-        }
+        $raw = $this->HWextension_db_SccpTableData($dataSet, $data);
         foreach ($raw as $value) {
             $id = $value[$indexField];
             $result[$id] = $value;
         }
-        return $result;
+        return (array) $result;
     }
 
-    public function HWextension_db_SccpTableData($dataid, $data = array())
+    public function HWextension_db_SccpTableData($dataSet, $data = array())
     {
         // $stmt is a single row fetch, $stmts is a fetchAll.
         global $db;
         $stmt = '';
         $stmts = '';
-        if ($dataid == '') {
-            return false;
-        }
-        switch ($dataid) {
+        $raw_settings = array();
+        switch ($dataSet) {
             case 'SccpExtension':
                 if (empty($data['name'])) {
                     $stmts = $db->prepare('SELECT * FROM sccpline ORDER BY name');
@@ -132,19 +127,17 @@ class dbinterface
                     $stmts = $db->prepare('SELECT * FROM sccpbuttonconfig WHERE ' .$sql. ' ORDER BY instance');
                     $stmts->bindParam(':buttontype', $data['buttontype'],\PDO::PARAM_STR);
                     $stmts->bindParam(':ref', $data['id'],\PDO::PARAM_STR);
-                } else {
-                    $raw_settings = array();
                 }
                 break;
         }
         if (!empty($stmt)) {
             $stmt->execute();
-            $raw_settings = $stmt->fetch(\PDO::FETCH_ASSOC);
+            $raw_settings = (array) $stmt->fetch(\PDO::FETCH_ASSOC);
         } elseif (!empty($stmts)) {
             $stmts->execute();
-            $raw_settings = $stmts->fetchAll(\PDO::FETCH_ASSOC);
+            $raw_settings = (array) $stmts->fetchAll(\PDO::FETCH_ASSOC);
         }
-        return $raw_settings;
+        return (array) $raw_settings;
     }
 
     public function get_db_SccpSetting()
@@ -173,9 +166,9 @@ class dbinterface
     function getDb_model_info($get = 'all', $format_list = 'all', $filter = array())
     {
         global $db;
-        $sel_inf = '*, 0 as validate';
+        $sel_inf = '*';    // not necessary to append validate as treat directly when validate is requested
         if ($format_list === 'model') {
-            $sel_inf = 'model, vendor, dns, buttons, 0 as validate';
+            $sel_inf = 'model, vendor, dns, buttons'; // as above
         }
         switch ($get) {
             case 'byciscoid':

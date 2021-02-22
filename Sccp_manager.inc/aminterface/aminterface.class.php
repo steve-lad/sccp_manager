@@ -436,7 +436,7 @@ class aminterface
         if ($this->_connect_state) {
             $_action = new \FreePBX\modules\Sccp_manager\aminterface\ExtensionStateListAction();
             $_res = $this->send($_action)->getResult();
-dbug('result from ExtensionStateList is', $_res);
+//dbug('result from ExtensionStateList is', $_res);
 //            $_res = $_response->getResult();
             foreach ($_res as $key => $value) {
                 foreach ($value as $key2 => $value2) {

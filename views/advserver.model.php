@@ -226,13 +226,13 @@
 
     function SetColColorFirm(value, row, index) {
         if (row['validate'].split(';')[0] === 'no') {
-            return  'No found '+ value;
+            return  'File not found' + "<br />" + value;
         }
         return value;
     }
     function SetColColorTempl(value, row, index) {
         if (row['validate'].split(';')[1] === 'no') {
-            return  'No found '  + value ;
+            return  'File not found' + "<br />" + value;
         }
         return value;
 
